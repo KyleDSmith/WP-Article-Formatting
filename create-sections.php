@@ -1,20 +1,67 @@
 // Wrap H2-H4 in <Section> Elements
 
 function add_sections( $content ) {
-    if (is_single() && !is_front_page()) {
-        $content = '<div id="entry-content" itemprop="articleBody text" class="e-content entry-content">' . $content . '</div><!-- /entry-content -->';
-        if ( (preg_match ( '/<h2([^>]+)?>(\s*?)<h2([^>]+)?>/', $content ) !== false) ) {
-            $content = preg_replace( '/<h4(.+?)(?=((<h4)|(<h3)|(<h2)|(<\/div><\!-- \/entry-content -->)))/s', '<section><h4$1</section>', $content );
-            $content = preg_replace( '/<h3(.+?)(?=((<h3)|(<h2)|(<\/div><\!-- \/entry-content -->)))/s', '<section><h3$1</section>', $content );
-            $content = preg_replace( '/<h2(.+?)(?=((<h2)|(<\/div><\!-- \/entry-content -->)))/s', '<section><h2$1</section>', $content );
-            $content = preg_replace( '/(<p)(.+)(?=(<h2|<section|<div|<\/div))/sU', '<div role="doc-introduction" itemprop="articleSection">$1 class="post-p first-paragraph" id="p0"$2</div>', $content, 1 );
-            $content = preg_replace( '/<\/div><\!-- \/entry-content -->/s', '</div>', $content );
-            return $content;
-        } else {
-            return $content;
-        }
-    } else {
-            return $content;
-    }
+	if (is_single() && in_the_loop() && is_main_query() && !empty($content) && !is_front_page() && !is_attachment() && !is_page()) {
+		
+		// Check if an <h2> begins the content
+		$newContent = '';
+		$contentArray = explode('<h2', $content);
+		$i = 1;
+		$newcontentPiece = '';
+		foreach ( $contentArray as $contentPiece ) {
+			if ( $i == 1 ) {
+				$contentPiece = '<div role="doc-introduction" itemprop="articleSection" class="intro-div div__articleIntro">' . $contentPiece . '';
+			} elseif ( $i == 2 ) {
+				$contentPiece = '</div><section><h2' . $contentPiece . '</section>';
+			} else {
+				$contentPiece = '<section><h2' . $contentPiece . '</section>';
+			}
+			$newh3contentPiece = '';
+			$h3contentArray = explode( '<h3', $contentPiece );
+			$H3i = 1;
+			if ( $h3contentArray !== '' ) {
+				foreach ( $h3contentArray as $h3contentPiece ) {
+					if ( $H3i == 1 ) {
+						$h3contentPiece = '' . $h3contentPiece . '';
+					} else {
+						$h3contentPiece = '<section><h3' . $h3contentPiece . '</section>';
+					}
+					$newh4contentPiece = '';
+					$h4contentArray = explode( '<h4', $h3contentPiece );
+					$H4i = 1;
+					if ( $h4contentArray !== '' ) {
+						foreach ( $h4contentArray as $h4contentPiece ) {
+							if ( $H4i == 1 ) {
+								$h4contentPiece = '' . $h4contentPiece . '';
+							} else {
+								$h4contentPiece = '<section><h4' . $h4contentPiece . '</section>';
+							}
+							$newh4contentPiece = $newh4contentPiece . $h4contentPiece;
+							$H4i++;
+						}
+						$h3contentPiece = $newh4contentPiece;
+					}
+					$newh3contentPiece = $newh3contentPiece . $h3contentPiece;
+					$H3i++;
+				}
+				$newcontentPiece = $newh3contentPiece;
+			} else {
+				$newcontentPiece = $contentPiece;
+			}
+			$newContent = $newContent . $newcontentPiece;
+			$i++;
+		}
+		$content = '<div id="entry-content" itemprop="articleBody text" class="e-content entry-content article--div__entryContent">' . $newContent . '</div>';
+		$doc = new DOMDocument();
+		$libxml_previous_state = libxml_use_internal_errors(true);
+		// Inject the Post Content
+		$doc->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8') , LIBXML_HTML_NODEFDTD | LIBXML_NOXMLDECL | LIBXML_NOBLANKS | LIBXML_ERR_WARNING | LIBXML_NOEMPTYTAG);
+		libxml_use_internal_errors($libxml_previous_state);
+		$libxml_previous_state = libxml_use_internal_errors(true);
+		$content = $doc->saveHTML();
+		return $content;
+	} else {
+		return $content;
+	}
 }
 add_filter( 'the_content', 'add_sections', 8, 1);
