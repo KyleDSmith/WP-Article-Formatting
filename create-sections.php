@@ -1,7 +1,9 @@
+<?php
 // Wrap H2-H4 in <Section> Elements
-
 function add_sections( $content ) {
 	if (is_single() && in_the_loop() && is_main_query() && !empty($content) && !is_front_page() && !is_attachment() && !is_page()) {
+		
+		// Check if an <h2> begins the content
 		$newContent = '';
 		$contentArray = explode('<h2', $content);
 		$i = 1;
@@ -53,13 +55,14 @@ function add_sections( $content ) {
 		$doc = new DOMDocument();
 		$libxml_previous_state = libxml_use_internal_errors(true);
 		// Inject the Post Content
-		$doc->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8') , LIBXML_HTML_NODEFDTD | LIBXML_NOXMLDECL | LIBXML_NOBLANKS | LIBXML_ERR_WARNING | LIBXML_NOEMPTYTAG);
+		$doc->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8') , LIBXML_HTML_NODEFDTD | LIBXML_NOXMLDECL | LIBXML_NOBLANKS | LIBXML_ERR_WARNING | LIBXML_NOEMPTYTAG | LIBXML_HTML_NOIMPLIED);
 		libxml_use_internal_errors($libxml_previous_state);
 		$libxml_previous_state = libxml_use_internal_errors(true);
-		$content = $doc->saveHTML();
+		$content = trim($doc->saveHTML());
 		return $content;
 	} else {
 		return $content;
 	}
 }
 add_filter( 'the_content', 'add_sections', 8, 1);
+?>
