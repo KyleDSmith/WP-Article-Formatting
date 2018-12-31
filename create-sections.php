@@ -2,8 +2,6 @@
 
 function add_sections( $content ) {
 	if (is_single() && in_the_loop() && is_main_query() && !empty($content) && !is_front_page() && !is_attachment() && !is_page()) {
-		
-		// Check if an <h2> begins the content
 		$newContent = '';
 		$contentArray = explode('<h2', $content);
 		$i = 1;
