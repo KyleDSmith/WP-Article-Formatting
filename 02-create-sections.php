@@ -10,11 +10,11 @@ function add_sections( $content ) {
 		$newcontentPiece = '';
 		foreach ( $contentArray as $contentPiece ) {
 			if ( $i == 1 ) {
-				$contentPiece = '<div role="doc-introduction" itemprop="articleSection" class="intro-div div__articleIntro">' . $contentPiece . '';
+				$contentPiece = '<div class="intro-div div__articleIntro" id="articleIntro" role="doc-introduction">' . $contentPiece . '';
 			} elseif ( $i == 2 ) {
-				$contentPiece = '</div><section><h2' . $contentPiece . '</section>';
+				$contentPiece = '</div><section role="doc-chapter"><h2' . $contentPiece . '</section>';
 			} else {
-				$contentPiece = '<section><h2' . $contentPiece . '</section>';
+				$contentPiece = '<section role="doc-chapter"><h2' . $contentPiece . '</section>';
 			}
 			$newh3contentPiece = '';
 			$h3contentArray = explode( '<h3', $contentPiece );
@@ -51,18 +51,18 @@ function add_sections( $content ) {
 			$newContent = $newContent . $newcontentPiece;
 			$i++;
 		}
-		$content = '<div id="entry-content" itemprop="articleBody text" class="e-content entry-content article--div__entryContent">' . $newContent . '</div>';
+		$content = '<div id="entryContent" itemprop="articleBody text" class="e-content entry-content article--div__entryContent">' . $newContent . '</div>';
 		$doc = new DOMDocument();
+		global $wp;
 		$libxml_previous_state = libxml_use_internal_errors(true);
 		// Inject the Post Content
-		$doc->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8') , LIBXML_HTML_NODEFDTD | LIBXML_NOXMLDECL | LIBXML_NOBLANKS | LIBXML_ERR_WARNING | LIBXML_NOEMPTYTAG | LIBXML_HTML_NOIMPLIED);
+		$doc->loadHTML(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOEMPTYTAG /*, LIBXML_HTML_NODEFDTD | LIBXML_NOXMLDECL | LIBXML_NOBLANKS | LIBXML_ERR_WARNING | LIBXML_NOEMPTYTAG | LIBXML_HTML_NOIMPLIED*/);
 		libxml_use_internal_errors($libxml_previous_state);
-		$libxml_previous_state = libxml_use_internal_errors(true);
 		$content = trim($doc->saveHTML());
 		return $content;
 	} else {
 		return $content;
 	}
 }
-add_filter( 'the_content', 'add_sections', 8, 1);
+add_filter( 'the_content', 'add_sections', 9 );
 ?>
