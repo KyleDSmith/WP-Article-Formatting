@@ -2,6 +2,7 @@
 function add_classes_to_post_content($content = '') {
 	/*=====================================================================================
 	=              Add Classes to All HTML Elements Denoting Their Tag Name               =
+	=              https://css-tricks.com/efficiently-rendering-css/					  =
 	======================================================================================*/
 
 	global $post;
@@ -10,12 +11,12 @@ function add_classes_to_post_content($content = '') {
 		
 	// Create an instance of DOMDocument.
     	$doc = new DOMDocument();
-	
+		global $wp;
     	// Supress errors due to malformed HTML.
     	// See http://stackoverflow.com/a/17559716/3059883
     	$libxml_previous_state = libxml_use_internal_errors( true );
-	
-	$doc->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOXMLDECL );
+		
+	$doc->loadHTML( mb_convert_encoding( $content, 'HTML-ENTITIES', 'UTF-8' ), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOEMPTYTAG );
 	
 	// Restore previous state of libxml_use_internal_errors() now that we're done.
     	libxml_use_internal_errors( $libxml_previous_state );
@@ -29,11 +30,21 @@ function add_classes_to_post_content($content = '') {
 				$newaClass = "a a__bodyLink a__bodyLinkInternal " . $oldaClass;
 				$asingle->removeAttribute('class');
 				$asingle->setAttribute('class', $newaClass );
+			} elseif( stripos($url,'mailto:') !== false ) {
+				$oldaClass = $asingle->getAttribute( 'class' );
+				$newaClass = "a a__bodyLink a__bodyLinkEmail " . $oldaClass;
+				$asingle->removeAttribute('class');
+				$asingle->setAttribute('class', $newaClass );
 			} else {
 				$oldaClass = $asingle->getAttribute( 'class' );
 				$newaClass = "a a__bodyLink a__bodyLinkExternal " . $oldaClass;
 				$asingle->removeAttribute('class');
 				$asingle->setAttribute('class', $newaClass );
+				$asingle->setAttribute('rel', 'noopener noreferrer');
+				$asingle->setAttribute('target', '_blank');
+				$newSR_onlyText = $doc->createElement('span', ' (Opens in new window)');
+				$asingle->appendChild($newSR_onlyText);
+				$newSR_onlyText->setAttribute('class', 'sr-only' );
 			}
 		}
 	};
@@ -1113,6 +1124,6 @@ function add_classes_to_post_content($content = '') {
  
 }
 	
-add_filter( 'the_content', 'add_classes_to_post_content', 9, 1 );
+add_filter( 'the_content', 'add_classes_to_post_content', 9 );
 
 ?>
